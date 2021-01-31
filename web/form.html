@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>form表单，数据提交后台python</title>
+</head>
+<body>
+    <form method="post" action="http://localhost:8000/cgi-bin/form.py"> <!--目标文件必须在cgi-bin包下，否则服务器不能解析-->
+        name: <input type="text" name="user"><br/>
+        <input type="submit" value="GO">
+    </form>
+</body>
+</html>

@@ -20,7 +20,7 @@ KEYWORD_RATIO = 0.6
 
 lemmatizer = WordNetLemmatizer() # lemmatizer
 
-text = """ Compatibility of systems of linear constraints over the set of natural numbers. Criteria of compatibility of a system of linear Diophantine equations, strict inequations, and nonstrict inequations are considered. Upper bounds for components of a minimal set of solutions and algorithms of construction of minimal generating sets of solutions for all types of systems are given. These criteria and the corresponding algorithms for constructing a minimal supporting set of solutions can be used in solving all the considered types systems and systems of mixed types."""
+
 # text = """In this paper, we introduce TextRank – a graph-based ranking model for text processing, and show how this model can be successfully used in natural language applications. In particular, we propose two innova- tive unsupervised methods for keyword and sentence extraction, and show that the results obtained com- pare favorably with previously published results on established benchmarks."""
 def keywords(text):
     print('-----------------Initiated-----------------')
@@ -99,6 +99,8 @@ def keywords(text):
     # conduct the page rank
     print('PageRanking...')
     damping = DAMPING_FACTOR
+    if (len(list(text_graph.nodes))==0):
+        raise ValueError("Text is empty!")
     lemma_score_dict = dict.fromkeys(text_graph.nodes(), 1/len(list(text_graph.nodes)))
     for epoch in range(CONVERGENCE_EPOCH_NUM):
         convergence_achieved = 0
@@ -159,25 +161,29 @@ def keywords(text):
         score = 0
         for word in comb: 
             score += lemma_score_dict[token_lemma_dict[word]]
-        keyword_score_dict[keyword] = score
+        keyword_score_dict[keyword] = score**2
 
 
     result_keywords.sort(key=lambda x: keyword_score_dict[x], reverse=True)
-    # return keyword_score_dict, result_keywords
+    
 
     # Generate Word Cloud
     print('Generating word cloud...')
     cloud_mask = np.array(Image.open("blackpic.jpg"))
     wordcloud = wc.WordCloud(width=900,height=500, max_words=1628,relative_scaling=0.5,normalize_plurals=False,mask=cloud_mask).generate_from_frequencies(keyword_score_dict)
-    plt.imshow(wordcloud, interpolation='bilinear')
-    plt.axis("off")
-    plt.show()
+    wc_array = wordcloud.to_array()
+    # plt.imshow(wordcloud, interpolation='bilinear')
 
     print('------------------Results------------------')
     for i in result_keywords:
         print('{0} ({1})'.format(i, keyword_score_dict[i]))
 
-keywords(text)
+    return keyword_score_dict, result_keywords, wc_array
+
+
+if __name__ == '__main__':
+    text = """Compatibility of systems of linear constraints over the set of natural numbers. Criteria of compatibility of a system of linear Diophantine equations, strict inequations, and nonstrict inequations are considered. Upper bounds for components of a minimal set of solutions and algorithms of construction of minimal generating sets of solutions for all types of systems are given. These criteria and the corresponding algorithms for constructing a minimal supporting set of solutions can be used in solving all the considered types systems and systems of mixed types."""
+    keywords(text)
 
 
 
