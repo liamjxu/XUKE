@@ -17,4 +17,4 @@ if (st.button('Generate!',key='b1')):
         keyword_score_dict, result_keywords, wc_array = keywords(user_input)
         st.image(wc_array)
 
-        st.write("Keywords extracted: ",keyword_score_dict)
+        st.write("Keywords extracted: ",result_keywords)
