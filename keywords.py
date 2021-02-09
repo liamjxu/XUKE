@@ -16,6 +16,7 @@ CONVERGENCE_EPOCH_NUM = 50      # force stop after how many epochs
 WINDOW_SIZE = 10    # window size 
 DAMPING_FACTOR = 0.85
 KEYWORD_RATIO = 0.6
+TEXT_EXAMPLE = """Compatibility of systems of linear constraints over the set of natural numbers. Criteria of compatibility of a system of linear Diophantine equations, strict inequations, and nonstrict inequations are considered. Upper bounds for components of a minimal set of solutions and algorithms of construction of minimal generating sets of solutions for all types of systems are given. These criteria and the corresponding algorithms for constructing a minimal supporting set of solutions can be used in solving all the considered types systems and systems of mixed types."""
 
 
 lemmatizer = WordNetLemmatizer() # lemmatizer
@@ -166,13 +167,7 @@ def keywords(text):
 
     result_keywords.sort(key=lambda x: keyword_score_dict[x], reverse=True)
     
-
-    # Generate Word Cloud
-    print('Generating word cloud...')
-    cloud_mask = np.array(Image.open("blackpic.jpg"))
-    wordcloud = wc.WordCloud(width=900,height=500, max_words=1628,relative_scaling=0.5,normalize_plurals=False,mask=cloud_mask).generate_from_frequencies(keyword_score_dict)
-    wc_array = wordcloud.to_array()
-    # plt.imshow(wordcloud, interpolation='bilinear')
+    wc_array = generate_word_cloud(keyword_score_dict)
 
     print('------------------Results------------------')
     for i in result_keywords:
@@ -180,9 +175,17 @@ def keywords(text):
 
     return keyword_score_dict, result_keywords, wc_array
 
+def generate_word_cloud(keyword_score_dict):
+    # Generate Word Cloud
+    print('Generating word cloud...')
+    cloud_mask = np.array(Image.open("blackpic.jpg"))
+    wordcloud = wc.WordCloud(width=900,height=500, max_words=1628,relative_scaling=0.5,normalize_plurals=False,mask=cloud_mask).generate_from_frequencies(keyword_score_dict)
+    wc_array = wordcloud.to_array()
+    return wc_array
+    # plt.imshow(wordcloud, interpolation='bilinear')
 
 if __name__ == '__main__':
-    text = """Compatibility of systems of linear constraints over the set of natural numbers. Criteria of compatibility of a system of linear Diophantine equations, strict inequations, and nonstrict inequations are considered. Upper bounds for components of a minimal set of solutions and algorithms of construction of minimal generating sets of solutions for all types of systems are given. These criteria and the corresponding algorithms for constructing a minimal supporting set of solutions can be used in solving all the considered types systems and systems of mixed types."""
+    text = TEXT_EXAMPLE
     keywords(text)
 
 
