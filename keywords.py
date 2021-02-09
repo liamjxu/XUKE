@@ -4,6 +4,7 @@ from nltk.stem import WordNetLemmatizer
 from itertools import combinations
 from queue import Queue
 import numpy as np
+from collections import Counter
 
 from PIL import Image
 import matplotlib.pyplot as plt
@@ -17,7 +18,6 @@ WINDOW_SIZE = 10    # window size
 DAMPING_FACTOR = 0.85
 KEYWORD_RATIO = 0.6
 TEXT_EXAMPLE = """Compatibility of systems of linear constraints over the set of natural numbers. Criteria of compatibility of a system of linear Diophantine equations, strict inequations, and nonstrict inequations are considered. Upper bounds for components of a minimal set of solutions and algorithms of construction of minimal generating sets of solutions for all types of systems are given. These criteria and the corresponding algorithms for constructing a minimal supporting set of solutions can be used in solving all the considered types systems and systems of mixed types."""
-
 
 lemmatizer = WordNetLemmatizer() # lemmatizer
 
@@ -184,9 +184,50 @@ def generate_word_cloud(keyword_score_dict):
     return wc_array
     # plt.imshow(wordcloud, interpolation='bilinear')
 
+def keywords_multiple(text_list):
+    if not isinstance(text_list, list):
+        raise ValueError('Input is not a list')
+
+    final_cnt = Counter({})
+    for text in text_list:
+        keyword_score_dict, _, _ = keywords(text)
+        current_cnt = Counter(keyword_score_dict)
+        final_cnt = final_cnt + current_cnt
+
+    final_keyword_score_dict = dict(final_cnt)
+    
+    return final_keyword_score_dict
+
+def generate_word_cloud_with_ratio(_keyword_score_dict, ratio):
+    # Generate Word Cloud
+    if len(_keyword_score_dict) == 0:
+        return np.array([[]]), []
+    print(_keyword_score_dict)
+    key_list = list(_keyword_score_dict.keys())
+    key_list.sort(key=lambda x:_keyword_score_dict[x], reverse=True)
+    selected_len = int(len(key_list)*ratio)
+    key_list = key_list[:selected_len]
+    keyword_score_dict = {k:_keyword_score_dict[k] for k in key_list if k in _keyword_score_dict}
+    # print(keyword_score_dict)
+    print('Generating word cloud...')
+    cloud_mask = np.array(Image.open("blackpic.jpg"))
+    wordcloud = wc.WordCloud(width=900,height=500, max_words=1628,relative_scaling=0.5,normalize_plurals=False,mask=cloud_mask).generate_from_frequencies(keyword_score_dict)
+    wc_array = wordcloud.to_array()
+    return wc_array, key_list
+    # plt.imshow(wordcloud, interpolation='bilinear')
+
+
 if __name__ == '__main__':
-    text = TEXT_EXAMPLE
-    keywords(text)
+    # text = TEXT_EXAMPLE
+    default_text_1 = "Graph is an important data representation which appears in a wide diversity of real-world scenarios. Effective graph analytics provides users a deeper understanding of what is behind the data, and thus can benefit a lot of useful applications such as node classification, node recommendation, link prediction, etc. However, most graph analytics methods suffer the high computation and space cost. Graph embedding is an effective yet efficient way to solve the graph analytics problem. It converts the graph data into a low dimensional space in which the graph structural information and graph properties are maximumly preserved. In this survey, we conduct a comprehensive review of the literature in graph embedding. We first introduce the formal definition of graph embedding as well as the related concepts. After that, we propose two taxonomies of graph embedding which correspond to what challenges exist in different graph embedding problem settings and how the existing work addresses these challenges in their solutions. Finally, we summarize the applications that graph embedding enables and suggest four promising future research directions in terms of computation efficiency, problem settings, techniques, and application scenarios."
+    default_text_2 = "Witnessing the emergence of Twitter, we propose a Twitter-based Event Detection and Analysis System (TEDAS), which helps to (1) detect new events, to (2) analyze the spatial and temporal pattern of an event, and to (3) identify importance of events. In this demonstration, we show the overall system architecture, explain in detail the implementation of the components that crawl, classify, and rank tweets and extract location from tweets, and present some interesting results of our system."
+    default_text_3 = "The Web has been rapidly \"deepened\" by the prevalence of databases online. With the potentially unlimited information hidden behind their query interfaces, this \"deep Web\" of searchable databses is clearly an important frontier for data access. This paper surveys this relatively unexplored frontier, measuring characteristics pertinent to both exploring and integrating structured Web sources. On one hand, our \"macro\" study surveys the deep Web at large, in April 2004, adopting the random IP-sampling approach, with one million samples. (How large is the deep Web? How is it covered by current directory services?) On the other hand, our \"micro\" study surveys source-specific characteristics over 441 sources in eight representative domains, in December 2002. (How \"hidden\" are deep-Web sources? How do search engines cover their data? How complex and expressive are query forms?) We report our observations and publish the resulting datasets to the research community. We conclude with several implications (of our own) which, while necessarily subjective, might help shape research directions and solutions."
+    default_text_4 = "Users' locations are important to many applications such as targeted advertisement and news recommendation. In this paper, we focus on the problem of profiling users' home locations in the context of social network (Twitter). The problem is nontrivial, because signals, which may help to identify a user's location, are scarce and noisy. We propose a unified discriminative influence model, named as UDI, to solve the problem. To overcome the challenge of scarce signals, UDI integrates signals observed from both social network (friends) and user-centric data (tweets) in a unified probabilistic framework. To overcome the challenge of noisy signals, UDI captures how likely a user connects to a signal with respect to 1) the distance between the user and the signal, and 2) the influence scope of the signal. Based on the model, we develop local and global location prediction methods. The experiments on a large scale data set show that our methods improve the state-of-the-art methods by 13%, and achieve the best performance."
+
+    default_text_list = [default_text_1, default_text_2, default_text_3, default_text_4]
+
+    final_keyword_score_dict = keywords_multiple(default_text_list)
+    print(final_keyword_score_dict)
 
 
 
