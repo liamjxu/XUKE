@@ -1,3 +1,6 @@
+# This code is created based on Jiaying Li's code for achieving researcher's paper counts
+# which is shared on Slack on Feb 9th, 2021. 
+
 import requests
 import json
 import glob

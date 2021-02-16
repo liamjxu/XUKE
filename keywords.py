@@ -16,7 +16,6 @@ WINDOW_SIZE = 10    # window size
 DAMPING_FACTOR = 0.85
 KEYWORD_RATIO = 0.6
 
-# text = """In this paper, we introduce TextRank – a graph-based ranking model for text processing, and show how this model can be successfully used in natural language applications. In particular, we propose two innova- tive unsupervised methods for keyword and sentence extraction, and show that the results obtained com- pare favorably with previously published results on established benchmarks."""
 def keywords(text, ratio=KEYWORD_RATIO):
 
     # Sanity check
