@@ -19,7 +19,6 @@ DAMPING_FACTOR = 0.85
 KEYWORD_RATIO = 0.6
 TEXT_EXAMPLE = """Compatibility of systems of linear constraints over the set of natural numbers. Criteria of compatibility of a system of linear Diophantine equations, strict inequations, and nonstrict inequations are considered. Upper bounds for components of a minimal set of solutions and algorithms of construction of minimal generating sets of solutions for all types of systems are given. These criteria and the corresponding algorithms for constructing a minimal supporting set of solutions can be used in solving all the considered types systems and systems of mixed types."""
 
-lemmatizer = WordNetLemmatizer() # lemmatizer
 
 
 # text = """In this paper, we introduce TextRank – a graph-based ranking model for text processing, and show how this model can be successfully used in natural language applications. In particular, we propose two innova- tive unsupervised methods for keyword and sentence extraction, and show that the results obtained com- pare favorably with previously published results on established benchmarks."""
@@ -38,17 +37,9 @@ def keywords(text):
     tokenizer = nltk.RegexpTokenizer(r"\w+")
     tokenized_text = tokenizer.tokenize(text.lower())
     tokenized_text_with_punc = nltk.word_tokenize(text.lower())
-    # tokenized_text = nltk.word_tokenize(text)
-    # print(tokenized_text)
-    # print(tokenized_text_with_punc)
-
-
 
     # filter out all the nouns and adjectives in filtered_text
     tagged_text = nltk.pos_tag(tokenized_text)
-    # print('tagged text:')
-    # print(tagged_text)
-    # print('\n\n')
     filtered_unit = list(filter(lambda x : x[1] in INCLUDE_POS, tagged_text))
     filtered_text = [ x[0] for x in filtered_unit]
     token_pos_dict = {}
@@ -64,6 +55,7 @@ def keywords(text):
             text_graph.add_node(word)
     
     # set the graph edges with weights (1/2) first window
+    lemmatizer = WordNetLemmatizer() # lemmatizer
     first_window = tokenized_text[:WINDOW_SIZE]
     for word1, word2 in combinations(first_window, 2):
         if word1 in filtered_text and word2 in filtered_text:
