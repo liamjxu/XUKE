@@ -25,7 +25,9 @@ default_text_list = [default_text_1, default_text_2, default_text_3, default_tex
 #         st.write("Keywords extracted: ",result_keywords)
 
 researcher_name = st.text_input("Name:",'Average Joe')
+
 researcher_affliation = st.text_input("Affliation:", 'University of Kelaideng')
+
 ratio = st.sidebar.slider('What is the ratio of keywords to keep? (%)', 0, 100, 60)
 
 # Generate From Name
@@ -36,5 +38,5 @@ if (st.button('Profile!',key='b2')):
     final_keyword_score_dict = keywords_multiple(default_text_list)
 
     wc_array, key_list = generate_word_cloud_with_ratio(final_keyword_score_dict, ratio/100)
-    st.image(wc_array)
+    st.image(wc_array, use_column_width=True)
     st.write("Keywords extracted: ",key_list)
