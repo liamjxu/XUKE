@@ -7,13 +7,15 @@ import glob
 import csv
 from fuzzywuzzy import fuzz
 
-# GLOBAL VARIABLES\
+# GLOBAL VARIABLES
 HEADERS = {"Ocp-Apim-Subscription-Key": "b0dbb13065164b6f8bcec38e89df091e"} # Specific to Liam Xu
 QUERYSTRING = {"mode":"json%0A"}
 PAYLOAD = "{}"
 COUNT = str(200)
 
-
+# Input:    affi - affiliation of the researcher 
+#           name - name of the researcher
+# Output:   author_mag_id - MAG ID of the researcher
 def MAG_get_AuID(affi, name):
     # Preprocessing for author's name and affliation
     name = name.strip().replace(', Ph.D.','').replace('Dr. ','')
@@ -24,7 +26,6 @@ def MAG_get_AuID(affi, name):
     find_authorID_attr = 'AA.AuN,AA.AuId'
     find_authorID_url = "https://api.labs.cognitive.microsoft.com/academic/v1.0/evaluate?&count=100&expr=Composite(AND(AA.AuN='{}',AA.AfN=='{}'))&attributes={}".format(name, affi, find_authorID_attr)
     response = requests.request("GET", find_authorID_url, headers=HEADERS, data=PAYLOAD, params=QUERYSTRING)
-    print(response.text)
     if 'entities' not in json.loads(response.text):
         print(name+' not Found')
         return
@@ -53,7 +54,9 @@ def _get_abstract_from_IA(index_length, inverted_index):
     abstract = u' '.join(token_list)
     return abstract
 
-
+# Input:    affi - affiliation of the researcher 
+#           name - name of the researcher
+# Output:   abstract_list - a list of abstract of the researcher's publication
 def MAG_get_abstracts(affi,name):
     # get author ID in MAG
     author_mag_id = MAG_get_AuID(affi,name)
@@ -61,6 +64,8 @@ def MAG_get_abstracts(affi,name):
     find_paper_attr = 'AW,DN,IA'
     find_paper_url = "https://api.labs.cognitive.microsoft.com/academic/v1.0/evaluate?&count={}&expr=Composite(AND(AA.AuId={}))&attributes={}".format(COUNT, str(author_mag_id), find_paper_attr)
     response = requests.request("GET", find_paper_url, headers=HEADERS, data=PAYLOAD, params=QUERYSTRING)
+    if 'entities' not in json.loads(response.text):
+        return []
     entity_list = json.loads(response.text)['entities']
 
     #Get paper information
@@ -70,14 +75,13 @@ def MAG_get_abstracts(affi,name):
             continue
         index_length = entity['IA']['IndexLength']
         inverted_index = entity['IA']['InvertedIndex']
-        print(entity['DN'])
         abstract = _get_abstract_from_IA(index_length, inverted_index)
         abstract_list.append(abstract)
     return abstract_list
 
 
 if __name__ == '__main__':
-    abstract_list = MAG_get_abstracts('University of Illinois at Urbana Champaign','Erhan Kudeki')
+    abstract_list = MAG_get_abstracts('University of Illinois at Urbana Champaign','Kevin Chenchuan Chang')
     for ab in abstract_list:
         print(ab)
         print('\n\n\n')

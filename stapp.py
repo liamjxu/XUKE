@@ -16,7 +16,10 @@ if (st.button('Profile!',key='b2')):
     st.write(ratio_num, '%')
 
     abstract_list = MAG_get_abstracts(researcher_affliation, researcher_name)
-    final_keyword_score_dict = keywords_multiple(abstract_list, ratio)
-    wc_array, key_list = generate_word_cloud(final_keyword_score_dict, ratio)
-    st.image(wc_array, use_column_width=True)
-    st.write("Keywords extracted: ", key_list)
+    if len(abstract_list) != 0:
+        final_keyword_score_dict = keywords_multiple(abstract_list, ratio)
+        wc_array, key_list = generate_word_cloud(final_keyword_score_dict, ratio)
+        st.image(wc_array, use_column_width=True)
+        st.write("Keywords extracted: ", key_list)
+    else:
+        st.write("No abstracts found for that researcher!")

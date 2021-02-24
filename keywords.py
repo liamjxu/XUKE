@@ -1,4 +1,4 @@
-# Algorithm Logic
+# The main logic of keyword extraction
 import nltk
 import networkx as nx
 import numpy as np
@@ -175,6 +175,4 @@ if __name__ == '__main__':
         abstract_list = MAG_get_abstracts('University of Illinois at Urbana Champaign','Kevin Chenchuan Chang')
         final_keyword_score_dict = keywords_multiple(abstract_list, 0.3)
         print(final_keyword_score_dict)
-
-
 
