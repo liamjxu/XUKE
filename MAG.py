@@ -60,17 +60,20 @@ def _get_abstract_from_IA(index_length, inverted_index):
 def MAG_get_abstracts(affi,name):
     # get author ID in MAG
     author_mag_id = MAG_get_AuID(affi,name)
+    
     # Find all the papers for that author ID
     find_paper_attr = 'AW,DN,IA,Y,CC'
     find_paper_url = "https://api.labs.cognitive.microsoft.com/academic/v1.0/evaluate?&count={}&expr=Composite(AND(AA.AuId={}))&attributes={}".format(COUNT, str(author_mag_id), find_paper_attr)
     response = requests.request("GET", find_paper_url, headers=HEADERS, data=PAYLOAD, params=QUERYSTRING)
-    if 'entities' not in json.loads(response.text):
+    try:
+        entity_list = json.loads(response.text)['entities']
+    except:
         return []
-    entity_list = json.loads(response.text)['entities']
 
     #Get paper information
     abstract_list = []
-    for entity in entity_list:
+    for entity_idx, entity in enumerate(entity_list):
+        print('[MAG_get_abstracts] Getting the abstract {} of {}'.format(entity_idx, len(entity_list)))
         if 'IA' not in entity:
             continue
         index_length = entity['IA']['IndexLength']

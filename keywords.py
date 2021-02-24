@@ -2,6 +2,7 @@
 import nltk
 import networkx as nx
 import numpy as np
+import json
 from nltk.stem import WordNetLemmatizer
 from itertools import combinations
 from queue import Queue
@@ -16,6 +17,7 @@ WINDOW_SIZE = 10    # window size used in graph building
 DAMPING_FACTOR = 0.85   # damping factor used in graph building
 KEYWORD_RATIO = 0.6     # how much keywords do we want to keep for each publication
 SCALING = 1.0    # how strong a effect the year has on publication importance, the larger the stronger.
+KEYWORD_LIST = json.load(open("cs_keyword_list.json", 'r')) # the keyword list for proper CS words
 
 def keywords(text, ratio=KEYWORD_RATIO):
 
@@ -37,7 +39,6 @@ def keywords(text, ratio=KEYWORD_RATIO):
     for x in filtered_unit:
         token_pos_dict[x[0]] = 'a' if x[1] == 'JJ' else 'n' 
 
-    print('Builidng Graph...')
     # build the graph
     text_graph = nx.Graph()
     for word in filtered_text:
@@ -80,12 +81,11 @@ def keywords(text, ratio=KEYWORD_RATIO):
                     token_lemma_dict[word2] = word2_lemma
 
     # conduct the page rank
-    print('PageRanking...')
     damping = DAMPING_FACTOR
     if (len(list(text_graph.nodes))==0):
         raise ValueError("Text is empty!")
     lemma_score_dict = dict.fromkeys(text_graph.nodes(), 1/len(list(text_graph.nodes)))
-    for epoch in range(CONVERGENCE_EPOCH_NUM):
+    for _ in range(CONVERGENCE_EPOCH_NUM):
         convergence_achieved = 0
         for i in text_graph.nodes:
             rank = 1 - damping
@@ -96,7 +96,6 @@ def keywords(text, ratio=KEYWORD_RATIO):
                 convergence_achieved += 1
             lemma_score_dict[i] = rank
         if convergence_achieved == len(text_graph.nodes()):
-            print('stopping epoch num:', epoch)
             break
 
     candidates = list(lemma_score_dict.keys())
@@ -104,7 +103,6 @@ def keywords(text, ratio=KEYWORD_RATIO):
     selected = candidates[:int(len(candidates)*KEYWORD_RATIO)]
 
     # combine keywords
-    print('Generating keywords...')
     combined_list = []
     current_combination = []
     for token in tokenized_text_with_punc: 
@@ -124,18 +122,16 @@ def keywords(text, ratio=KEYWORD_RATIO):
             current_combination.append(token)
 
     # output keywords
-    print('Combining keywords, generating key phrases...')
     keyword_score_dict = {}
     for comb in combined_list:
         # filter out single adjectives
         if len(comb) == 1 and token_pos_dict[comb[0]] == 'a':
             continue
-        keyword = ''
-        for idx in range(len(comb)-1):
-            keyword += comb[idx]
-            keyword += ' '
-        keyword += comb[-1]
-        # calculate keyword score
+        comb_lem = [lemmatizer.lemmatize(w.lower()) for w in comb]
+        # if (' '.join(comb_lem) not in KEYWORD_LIST):
+        if any(item not in KEYWORD_LIST for item in comb_lem):
+            continue
+        keyword = ' '.join(comb)
         score = 0
         for word in comb: 
             score += lemma_score_dict[token_lemma_dict[word]]
@@ -155,12 +151,14 @@ def keywords_multiple(text_list, ratio=KEYWORD_RATIO):
 
     final_cnt = Counter({})
     for idx, (text, year, citation) in enumerate(text_list):
-        print('Processing text {} of {}.'.format(idx, len(text_list)))
+        print('[keywords_multiple] Processing text ({} of {}).'.format(idx, len(text_list)))
         print('year: {}, citation:{}'.format(year, citation))
         year_score = 1 - (year-earliest)/(latest-earliest)
         citation_score = 1 - (citation-least)/(most-least)
         scaling_factor = np.e**(-1 * year_score * citation_score * SCALING)
+        
         keyword_score_dict = keywords(text, ratio)
+        
         keyword_score_dict_scaled = {k:v * scaling_factor for k,v in keyword_score_dict.items()}
         current_cnt = Counter(keyword_score_dict_scaled)
         final_cnt = final_cnt + current_cnt
@@ -199,6 +197,7 @@ if __name__ == '__main__':
     # TEST_2: keyword_multiple with MAG APIs
     if TEST_2: 
         abstract_list = MAG_get_abstracts('University of Illinois at Urbana Champaign','Kevin Chenchuan Chang')
+        abs_ = [ab[0] for ab in abstract_list]
         final_keyword_score_dict = keywords_multiple(abstract_list, 0.3)
         print(final_keyword_score_dict)
 
