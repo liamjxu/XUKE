@@ -61,7 +61,7 @@ def MAG_get_abstracts(affi,name):
     # get author ID in MAG
     author_mag_id = MAG_get_AuID(affi,name)
     # Find all the papers for that author ID
-    find_paper_attr = 'AW,DN,IA'
+    find_paper_attr = 'AW,DN,IA,Y'
     find_paper_url = "https://api.labs.cognitive.microsoft.com/academic/v1.0/evaluate?&count={}&expr=Composite(AND(AA.AuId={}))&attributes={}".format(COUNT, str(author_mag_id), find_paper_attr)
     response = requests.request("GET", find_paper_url, headers=HEADERS, data=PAYLOAD, params=QUERYSTRING)
     if 'entities' not in json.loads(response.text):
@@ -76,7 +76,12 @@ def MAG_get_abstracts(affi,name):
         index_length = entity['IA']['IndexLength']
         inverted_index = entity['IA']['InvertedIndex']
         abstract = _get_abstract_from_IA(index_length, inverted_index)
-        abstract_list.append(abstract)
+        pub_year = entity['Y']
+        abstract_list.append((abstract,pub_year))
+    print('abstract list is now :')
+    for ab in abstract_list:
+        print(ab)
+        print('\n\n')
     return abstract_list
 
 
