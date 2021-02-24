@@ -12,9 +12,10 @@ from MAG import MAG_get_abstracts
 INCLUDE_POS = ['NN','NNS','JJ']       # Syntax Filters
 CONVERGENCE_THRESHOLD = 0.0001  # Convergence threshold
 CONVERGENCE_EPOCH_NUM = 50      # force stop after how many epochs
-WINDOW_SIZE = 10    # window size 
-DAMPING_FACTOR = 0.85
-KEYWORD_RATIO = 0.6
+WINDOW_SIZE = 10    # window size used in graph building
+DAMPING_FACTOR = 0.85   # damping factor used in graph building
+KEYWORD_RATIO = 0.6     # how much keywords do we want to keep for each publication
+SCALING = 1.0    # how strong a effect the year has on publication importance, the larger the stronger.
 
 def keywords(text, ratio=KEYWORD_RATIO):
 
@@ -145,16 +146,32 @@ def keywords(text, ratio=KEYWORD_RATIO):
 def keywords_multiple(text_list, ratio=KEYWORD_RATIO):
     if not isinstance(text_list, list):
         raise ValueError('Input is not a list')
+    years = [i for (_,i,_) in text_list]
+    earliest = min(years)
+    latest = max(years)
+    citations = [i for (_,_,i) in text_list]
+    least = min(citations)
+    most = max(citations)
 
     final_cnt = Counter({})
-    for text in text_list:
+    for text, year, citation in text_list:
+        year_score = 1 - (year-earliest)/(latest-earliest)
+        citation_score = 1 - (citation-least)/(most-least)
+        scaling_factor = np.e**(-1 * year_score * citation_score * SCALING)
         keyword_score_dict = keywords(text, ratio)
-        current_cnt = Counter(keyword_score_dict)
+        keyword_score_dict_scaled = {k:v * scaling_factor for k,v in keyword_score_dict.items()}
+        current_cnt = Counter(keyword_score_dict_scaled)
         final_cnt = final_cnt + current_cnt
 
     final_keyword_score_dict = dict(final_cnt)
     
     return final_keyword_score_dict
+
+
+
+
+
+
 
 if __name__ == '__main__':
     TEST_1 = False

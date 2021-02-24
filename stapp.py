@@ -8,6 +8,7 @@ researcher_affliation = st.text_input("Affliation:", 'University of Illinois at 
 researcher_name = st.text_input("Name:",'Kevin Chenchuan Chang')
 ratio_num = st.sidebar.slider('What is the ratio of keywords to keep? (%)', 0, 100, 50)
 ratio = (ratio_num/100)**2.5
+# year_range = st.sidebar.slider('What is the year range of keywords to keep?', 0, 100, 50)
 
 # Generate From Name
 if (st.button('Profile!',key='b2')):
@@ -16,10 +17,10 @@ if (st.button('Profile!',key='b2')):
     st.write(ratio_num, '%')
 
     abstract_list = MAG_get_abstracts(researcher_affliation, researcher_name)
-    # if len(abstract_list) != 0:
-    #     final_keyword_score_dict = keywords_multiple(abstract_list, ratio)
-    #     wc_array, key_list = generate_word_cloud(final_keyword_score_dict, ratio)
-    #     st.image(wc_array, use_column_width=True)
-    #     st.write("Keywords extracted: ", key_list)
-    # else:
-    #     st.write("No abstracts found for that researcher!")
+    if len(abstract_list) != 0:
+        final_keyword_score_dict = keywords_multiple(abstract_list, ratio)
+        wc_array, key_list = generate_word_cloud(final_keyword_score_dict, ratio)
+        st.image(wc_array, use_column_width=True)
+        st.write("Keywords extracted: ", key_list)
+    else:
+        st.write("No abstracts found for that researcher!")
