@@ -154,7 +154,9 @@ def keywords_multiple(text_list, ratio=KEYWORD_RATIO):
     most = max(citations)
 
     final_cnt = Counter({})
-    for text, year, citation in text_list:
+    for idx, (text, year, citation) in enumerate(text_list):
+        print('Processing text {} of {}.'.format(idx, len(text_list)))
+        print('year: {}, citation:{}'.format(year, citation))
         year_score = 1 - (year-earliest)/(latest-earliest)
         citation_score = 1 - (citation-least)/(most-least)
         scaling_factor = np.e**(-1 * year_score * citation_score * SCALING)
@@ -167,7 +169,14 @@ def keywords_multiple(text_list, ratio=KEYWORD_RATIO):
     
     return final_keyword_score_dict
 
-
+def filter_abstracts(abstract_list, time_ratio):
+    years = [i for (_,i,_) in abstract_list]
+    earliest = min(years)
+    latest = max(years)
+    starting_year = int(earliest + time_ratio[0] * (latest-earliest))
+    ending_year = int(earliest + time_ratio[1] * (latest-earliest))
+    filtered_abstracts = [ab for ab in abstract_list if ab[1] >= starting_year and ab[1] <= ending_year]
+    return filtered_abstracts, starting_year, ending_year
 
 
 

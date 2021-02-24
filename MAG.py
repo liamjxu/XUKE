@@ -56,7 +56,7 @@ def _get_abstract_from_IA(index_length, inverted_index):
 
 # Input:    affi - affiliation of the researcher 
 #           name - name of the researcher
-# Output:   abstract_list - a list of abstract of the researcher's publication
+# Output:   abstract_list - a list of tuples of (abstract, year, citation)
 def MAG_get_abstracts(affi,name):
     # get author ID in MAG
     author_mag_id = MAG_get_AuID(affi,name)
