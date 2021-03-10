@@ -128,7 +128,6 @@ def keywords(text, ratio=KEYWORD_RATIO):
         if len(comb) == 1 and token_pos_dict[comb[0]] == 'a':
             continue
         comb_lem = [lemmatizer.lemmatize(w.lower()) for w in comb]
-        # if (' '.join(comb_lem) not in KEYWORD_LIST):
         if any(item not in KEYWORD_LIST for item in comb_lem):
             continue
         keyword = ' '.join(comb)
@@ -155,11 +154,11 @@ def keywords_multiple(text_list, ratio=KEYWORD_RATIO):
         print('year: {}, citation:{}'.format(year, citation))
         year_score = 1 - (year-earliest)/(latest-earliest)
         citation_score = 1 - (citation-least)/(most-least)
-        scaling_factor = np.e**(-1 * year_score * citation_score * SCALING)
+        paper_scaling_factor = np.e**(-1 * year_score * citation_score * SCALING) # how paper_scaling_factor is calculated
         
         keyword_score_dict = keywords(text, ratio)
         
-        keyword_score_dict_scaled = {k:v * scaling_factor for k,v in keyword_score_dict.items()}
+        keyword_score_dict_scaled = {k:v * paper_scaling_factor for k,v in keyword_score_dict.items()}
         current_cnt = Counter(keyword_score_dict_scaled)
         final_cnt = final_cnt + current_cnt
 

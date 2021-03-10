@@ -7,7 +7,7 @@ st.markdown('# Keyword Extraction based on TextRank:')
 researcher_affliation = st.text_input('Affiliation: ', 'University of Illinois at Urbana Champaign')
 researcher_name = st.text_input('Name: ','Kevin Chenchuan Chang')
 
-time_ratio_num = st.sidebar.slider('What is the ratio of time span to keep? (%)', 0, 100, (0,100))
+time_ratio_num = st.sidebar.slider('What is the ratio of time span to keep? (%)', 0, 100, (67,100))
 time_ratio = (time_ratio_num[0]/100, time_ratio_num[1]/100)
 keyword_ratio_num = st.sidebar.slider('What is the ratio of keywords to keep? (%)', 0, 100, 50)
 keyword_ratio = (keyword_ratio_num/100)**2.5
