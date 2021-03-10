@@ -8,6 +8,9 @@ from itertools import combinations
 from queue import Queue
 from collections import Counter
 from MAG import MAG_get_abstracts
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
+from typing import List, Tuple
 
 ###### GLOBAL VARS #####
 INCLUDE_POS = ['NN','NNS','JJ']       # Syntax Filters
@@ -18,8 +21,9 @@ DAMPING_FACTOR = 0.85   # damping factor used in graph building
 KEYWORD_RATIO = 0.6     # how much keywords do we want to keep for each publication
 SCALING = 1.0    # how strong a effect the year has on publication importance, the larger the stronger.
 KEYWORD_LIST = json.load(open("cs_keyword_list.json", 'r')) # the keyword list for proper CS words
+DIVERSITY = 0.9 # how diverse the keywords are
 
-def keywords(text, ratio=KEYWORD_RATIO):
+def keywords(text, ratio=KEYWORD_RATIO, diversity=DIVERSITY):
 
     # Sanity check
     if not isinstance(text, str):
@@ -100,7 +104,7 @@ def keywords(text, ratio=KEYWORD_RATIO):
 
     candidates = list(lemma_score_dict.keys())
     candidates.sort(key=lambda w: lemma_score_dict[w], reverse=True)
-    selected = candidates[:int(len(candidates)*KEYWORD_RATIO)]
+    selected = candidates[:int(len(candidates)*ratio)]
 
     # combine keywords
     combined_list = []
@@ -136,9 +140,12 @@ def keywords(text, ratio=KEYWORD_RATIO):
             score += lemma_score_dict[token_lemma_dict[word]]
         keyword_score_dict[keyword] = score
 
-    return keyword_score_dict
+    scattered_keywords = scatter_keywords(list(keyword_score_dict.keys()), text, diversity=diversity)
+    final_keyword_score_dict = {k:keyword_score_dict[k] for k in scattered_keywords}
 
-def keywords_multiple(text_list, ratio=KEYWORD_RATIO):
+    return final_keyword_score_dict
+
+def keywords_multiple(text_list, ratio=KEYWORD_RATIO, diversity=DIVERSITY):
     if not isinstance(text_list, list):
         raise ValueError('Input is not a list')
     years = [i for (_,i,_) in text_list]
@@ -156,14 +163,17 @@ def keywords_multiple(text_list, ratio=KEYWORD_RATIO):
         citation_score = 1 - (citation-least)/(most-least)
         paper_scaling_factor = np.e**(-1 * year_score * citation_score * SCALING) # how paper_scaling_factor is calculated
         
-        keyword_score_dict = keywords(text, ratio)
+        keyword_score_dict = keywords(text, ratio, diversity)
         
         keyword_score_dict_scaled = {k:v * paper_scaling_factor for k,v in keyword_score_dict.items()}
         current_cnt = Counter(keyword_score_dict_scaled)
         final_cnt = final_cnt + current_cnt
 
-    final_keyword_score_dict = dict(final_cnt)
+    keyword_score_dict = dict(final_cnt)
+    scattered_keywords = scatter_keywords(list(keyword_score_dict.keys()), ' . '.join([x[0] for x in text_list]), diversity=diversity)
+    final_keyword_score_dict = {k:keyword_score_dict[k] for k in scattered_keywords}
     
+    print(final_keyword_score_dict)
     return final_keyword_score_dict
 
 def filter_abstracts(abstract_list, time_ratio):
@@ -176,27 +186,47 @@ def filter_abstracts(abstract_list, time_ratio):
     return filtered_abstracts, starting_year, ending_year
 
 
+def _mmr(doc_embedding: np.ndarray,
+        word_embeddings: np.ndarray,
+        words: List[str],
+        top_n: int = 5,
+        diversity: float = 0.8) -> List[Tuple[str, float]]:
 
+    # Extract similarity within words, and between words and the document
+    word_doc_similarity = cosine_similarity(word_embeddings, doc_embedding)
+    word_similarity = cosine_similarity(word_embeddings)
 
+    # Initialize candidates and already choose best keyword/keyphras
+    keywords_idx = [np.argmax(word_doc_similarity)]
+    candidates_idx = [i for i in range(len(words)) if i != keywords_idx[0]]
 
-if __name__ == '__main__':
-    TEST_1 = False
-    TEST_2 = True
+    for _ in range(top_n - 1):
+        # Extract similarities within candidates and
+        # between candidates and selected keywords/phrases
+        candidate_similarities = word_doc_similarity[candidates_idx, :]
+        target_similarities = np.max(word_similarity[candidates_idx][:, keywords_idx], axis=1)
 
-    # TEST_1: keyword_multiple with default texts
-    if TEST_1:
-        default_text_1 = "Graph is an important data representation which appears in a wide diversity of real-world scenarios. Effective graph analytics provides users a deeper understanding of what is behind the data, and thus can benefit a lot of useful applications such as node classification, node recommendation, link prediction, etc. However, most graph analytics methods suffer the high computation and space cost. Graph embedding is an effective yet efficient way to solve the graph analytics problem. It converts the graph data into a low dimensional space in which the graph structural information and graph properties are maximumly preserved. In this survey, we conduct a comprehensive review of the literature in graph embedding. We first introduce the formal definition of graph embedding as well as the related concepts. After that, we propose two taxonomies of graph embedding which correspond to what challenges exist in different graph embedding problem settings and how the existing work addresses these challenges in their solutions. Finally, we summarize the applications that graph embedding enables and suggest four promising future research directions in terms of computation efficiency, problem settings, techniques, and application scenarios."
-        default_text_2 = "Witnessing the emergence of Twitter, we propose a Twitter-based Event Detection and Analysis System (TEDAS), which helps to (1) detect new events, to (2) analyze the spatial and temporal pattern of an event, and to (3) identify importance of events. In this demonstration, we show the overall system architecture, explain in detail the implementation of the components that crawl, classify, and rank tweets and extract location from tweets, and present some interesting results of our system."
-        default_text_3 = "The Web has been rapidly \"deepened\" by the prevalence of databases online. With the potentially unlimited information hidden behind their query interfaces, this \"deep Web\" of searchable databses is clearly an important frontier for data access. This paper surveys this relatively unexplored frontier, measuring characteristics pertinent to both exploring and integrating structured Web sources. On one hand, our \"macro\" study surveys the deep Web at large, in April 2004, adopting the random IP-sampling approach, with one million samples. (How large is the deep Web? How is it covered by current directory services?) On the other hand, our \"micro\" study surveys source-specific characteristics over 441 sources in eight representative domains, in December 2002. (How \"hidden\" are deep-Web sources? How do search engines cover their data? How complex and expressive are query forms?) We report our observations and publish the resulting datasets to the research community. We conclude with several implications (of our own) which, while necessarily subjective, might help shape research directions and solutions."
-        default_text_4 = "Users' locations are important to many applications such as targeted advertisement and news recommendation. In this paper, we focus on the problem of profiling users' home locations in the context of social network (Twitter). The problem is nontrivial, because signals, which may help to identify a user's location, are scarce and noisy. We propose a unified discriminative influence model, named as UDI, to solve the problem. To overcome the challenge of scarce signals, UDI integrates signals observed from both social network (friends) and user-centric data (tweets) in a unified probabilistic framework. To overcome the challenge of noisy signals, UDI captures how likely a user connects to a signal with respect to 1) the distance between the user and the signal, and 2) the influence scope of the signal. Based on the model, we develop local and global location prediction methods. The experiments on a large scale data set show that our methods improve the state-of-the-art methods by 13%, and achieve the best performance."
-        default_text_list = [default_text_1, default_text_2, default_text_3, default_text_4]
-        final_keyword_score_dict = keywords_multiple(default_text_list)
-        print(final_keyword_score_dict)
-    
-    # TEST_2: keyword_multiple with MAG APIs
-    if TEST_2: 
-        abstract_list = MAG_get_abstracts('University of Illinois at Urbana Champaign','Kevin Chenchuan Chang')
-        abs_ = [ab[0] for ab in abstract_list]
-        final_keyword_score_dict = keywords_multiple(abstract_list, 0.3)
-        print(final_keyword_score_dict)
+        # Calculate MMR
+        mmr = (1-diversity) * candidate_similarities - diversity * target_similarities.reshape(-1, 1)
+        mmr_idx = candidates_idx[np.argmax(mmr)]
 
+        # Update keywords & candidates
+        keywords_idx.append(mmr_idx)
+        candidates_idx.remove(mmr_idx)
+
+    return [(words[idx], round(float(word_doc_similarity.reshape(1, -1)[0][idx]), 4)) for idx in keywords_idx]
+
+def scatter_keywords(keywords, document, diversity=0.9, top_ratio=0.5):
+    model = SentenceTransformer('distilbert-base-nli-mean-tokens') #'distilbert-base-nli-mean-tokens'
+    document_embedding = model.encode(document).reshape(1,-1)
+    keyword_embeddings = model.encode(keywords)
+    top_n = int(len(keywords)*top_ratio)
+
+    scattered_keyword_value_pair = _mmr(document_embedding, keyword_embeddings, keywords, top_n, diversity)
+    scattered_keywords = [x[0] for x in scattered_keyword_value_pair]
+
+    print('keywords number:', len(keywords))
+    print('top_ratio:',top_ratio)
+    print('top_n:',top_n)
+    print('scattered keyword number:', len(scattered_keywords))
+    return scattered_keywords

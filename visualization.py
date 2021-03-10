@@ -15,6 +15,8 @@ def generate_word_cloud(_keyword_score_dict, ratio=1):
         key_list = key_list[:selected_len]
         keyword_score_dict = {k:_keyword_score_dict[k] for k in key_list if k in _keyword_score_dict}
     else: 
+        key_list = list(_keyword_score_dict.keys())
+        key_list.sort(key=lambda x:_keyword_score_dict[x], reverse=True)
         keyword_score_dict = _keyword_score_dict
 
     # Generate word cloud
