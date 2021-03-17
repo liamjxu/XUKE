@@ -21,7 +21,7 @@ def generate_word_cloud(_keyword_score_dict, ratio=1):
 
     # Generate word cloud
     cloud_mask = np.array(Image.open("blackpic.jpg"))
-    wordcloud = wc.WordCloud(width=900,height=500, max_words=1628,relative_scaling=0.5,normalize_plurals=False,mask=cloud_mask).generate_from_frequencies(keyword_score_dict)
+    wordcloud = wc.WordCloud(width=900,height=500, max_words=1628,relative_scaling=1.0,normalize_plurals=False,mask=cloud_mask).generate_from_frequencies(keyword_score_dict)
     wc_array = wordcloud.to_array()
 
-    return wc_array, key_list
+    return wordcloud, wc_array, key_list
