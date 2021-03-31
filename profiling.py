@@ -13,12 +13,11 @@ class Profile():
         self.name = name
         self.affi = affi
         self.model = SentenceTransformer(model)
-        self.keyword_list = json.load(open("cs_keyword_list.json", 'r')) # the keyword list for proper CS words
+        self.keyword_list = json.load(open("./resources/cs_keyword_list.json", 'r')) # the keyword list for proper CS words
         self.ab_idx = 0
         self.diversity = diversity
         keys = json.load(open("./resources/key.json", 'r'))
         values = json.load(open("./resources/freq.json", 'r'))
-        # self.dictionary = defaultdict(lambda: 0, dict(zip(keys,values)))
         self.dictionary = dict(zip(keys,values))
     
     def get_abstracts_from_MAG(self):
@@ -44,7 +43,6 @@ class Profile():
         self.latest = latest
         self.most = most 
         self.least = least
-        # return filtered_abstracts, starting_year, ending_year
 
     def extract_keywords(self, keyword_ratio=0.5):
         self.ab_idx = 0
@@ -70,7 +68,6 @@ class Profile():
                     if len(current_phrase) != 0:
                         comb_lem = [lemmatizer.lemmatize(w.lower()) for w in current_phrase]
                         if all(item in self.keyword_list for item in comb_lem):
-                        # if ' '.join(comb_lem) in self.dictionary:
                             candidate_phrases.append(' '.join(current_phrase))
                     current_phrase = []
                     last_tag = '@'
@@ -140,5 +137,3 @@ class Profile():
         return scattered_keyword_value_pair
 
 
-if __name__ == "__main__":
-    print('hello!')

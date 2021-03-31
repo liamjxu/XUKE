@@ -1,5 +1,4 @@
 import streamlit as st
-from keywords import keywords_multiple, filter_abstracts
 from MAG import MAG_get_abstracts
 from visualization import generate_word_cloud
 import time
