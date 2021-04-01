@@ -9,7 +9,7 @@ import numpy as np
 import json
 
 class Profile():
-    def __init__(self, name, affi, model='distilbert-base-nli-mean-tokens', diversity=0.9):
+    def __init__(self, name, affi, model='distilbert-base-nli-mean-tokens', diversity=0.7):
         self.name = name
         self.affi = affi
         self.model = SentenceTransformer(model)
@@ -19,6 +19,15 @@ class Profile():
         keys = json.load(open("./resources/key.json", 'r'))
         values = json.load(open("./resources/freq.json", 'r'))
         self.dictionary = dict(zip(keys,values))
+        self.basis_words = json.load(open('./resources/basis_words.json','r'))
+        unprocessed_basis = json.load(open("./resources/basis.json", 'r'))
+        mean_base = np.mean(unprocessed_basis, axis=0)
+        unprocessed_basis-=mean_base
+        self.basis = unprocessed_basis/np.linalg.norm(unprocessed_basis).reshape(-1,1)
+        self.mean_base = mean_base
+        self.keyword_score_dict = {}
+
+        
     
     def get_abstracts_from_MAG(self):
         self.abstracts = MAG_get_abstracts(self.affi, self.name)
@@ -88,9 +97,25 @@ class Profile():
             current_cnt = Counter(current_keyword_score_dict_scaled)
             final_cnt = final_cnt + current_cnt
 
-        keyword_score_dict = dict(final_cnt)
+        unprocessed_keyword_score_dict = dict(final_cnt)
+
+        keyword_score_dict = {}
+        for k in unprocessed_keyword_score_dict.keys():
+            if self._non_generic(k):
+                keyword_score_dict[k] = unprocessed_keyword_score_dict[k]
+        self.keyword_score_dict = keyword_score_dict
         return keyword_score_dict
             
+
+    def evaluate_subfields(self):
+        k_list = list(self.keyword_score_dict.keys())
+        word_embeddings = self.model.encode(k_list)
+        subfield_score = np.sum(self.basis @ word_embeddings.T, axis=0)
+        subfield_score /= np.sum(subfield_score)
+        return subfield_score
+
+
+
 
     def _mmr(self,
             doc_embedding: np.ndarray,
@@ -123,10 +148,23 @@ class Profile():
 
         return [(words[idx], round(float(word_doc_similarity.reshape(1, -1)[0][idx]), 4)) for idx in keywords_idx]
 
-    def scatter_keywords(self, keywords, document, diversity=0.9, top_ratio=0.5):
+    def _non_generic(self,word):
+        word_ = self.model.encode(word)-self.mean_base
+        c = self.basis @ word_.T 
+        c = np.abs(c)
+        max_val = np.max(c)
+        min_val = np.min(c)
+        if max_val/min_val > 500:
+            return True
+        else:
+            return False
+
+
+    def scatter_keywords(self, keywords, document, diversity, top_ratio):
         document_embedding = self.model.encode(document).reshape(1,-1)
         keyword_embeddings = self.model.encode(keywords)
-        top_n = int(len(keywords)*top_ratio)
+        # top_n = int(len(keywords)*top_ratio)
+        top_n = len(keywords)
 
         scattered_keyword_value_pair = self._mmr(document_embedding, keyword_embeddings, keywords, top_n, diversity)
         scattered_keywords = [x[0] for x in scattered_keyword_value_pair]

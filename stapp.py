@@ -6,7 +6,7 @@ from profiling import Profile
 
 # Get the name and affi for profiling
 st.markdown('# Keyword Extraction based on TextRank:')
-researcher_affliation = st.text_input('Affiliation: ', 'University of Illinois at Urbana Champaign')
+researcher_affiliation = st.text_input('Affiliation: ', 'University of Illinois at Urbana Champaign')
 researcher_name = st.text_input('Name: ','Kevin Chenchuan Chang')
 
 # get user-specified parameters
@@ -20,7 +20,7 @@ diversity = diversity_num/100
 st.text('The ratio of time span you selected is: {}% to {}% of their whole career'.format(time_ratio_num[0], time_ratio_num[1]))
 st.text('The ratio of keywords you selected is: {}%'.format(keyword_ratio_num))
 st.text('The diversity you selected is: {}%'.format(diversity_num))
-profile = Profile(researcher_name, researcher_affliation, diversity=diversity)
+profile = Profile(researcher_name, researcher_affiliation, diversity=diversity)
 
 # Generate From Name
 if (st.button('Profile!',key='b2')):
@@ -33,9 +33,11 @@ if (st.button('Profile!',key='b2')):
     init.text('The corresponding time span is from year {} to {}.'.format(profile.starting_year, profile.ending_year)) 
     if len(profile.abstracts) != 0:
         final_keyword_score_dict = profile.extract_keywords(keyword_ratio=keyword_ratio)
+        subfield_score = profile.evaluate_subfields()
         _, wc_array, key_list = generate_word_cloud(final_keyword_score_dict)
         st.image(wc_array, use_column_width=True)
         st.write("Keywords extracted: ", key_list)
+        st.write(dict(zip(profile.basis_words, subfield_score)))
     else:
         st.write("No abstracts found for that researcher!")
 
