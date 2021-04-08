@@ -109,6 +109,7 @@ class Profile():
 
     def evaluate_subfields(self):
         k_list = list(self.keyword_score_dict.keys())
+        k_list = k_list[:int(len(k_list)*1/3)]
         word_embeddings = self.model.encode(k_list)
         subfield_score = np.sum(self.basis @ word_embeddings.T, axis=0)
         subfield_score /= np.sum(subfield_score)
