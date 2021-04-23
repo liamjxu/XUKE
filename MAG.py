@@ -57,7 +57,7 @@ def _get_abstract_from_IA(index_length, inverted_index):
 # Input:    affi - affiliation of the researcher 
 #           name - name of the researcher
 # Output:   abstract_list - a list of tuples of (abstract, year, citation)
-def MAG_get_abstracts(affi,name):
+def MAG_get_abstracts(affi,name, mode='abstract'):
     # get author ID in MAG
     author_mag_id = MAG_get_AuID(affi,name)
     
@@ -82,8 +82,10 @@ def MAG_get_abstracts(affi,name):
         pub_year = entity['Y']
         pub_citation = entity['CC']
         title = entity['DN']
-        abstract_list.append((abstract,pub_year,pub_citation))
-        # abstract_list.append((title,pub_year,pub_citation))
+        if mode == 'abstract':
+            abstract_list.append((abstract,pub_year,pub_citation))
+        else:
+            abstract_list.append((title,pub_year,pub_citation))
     return abstract_list
 
 

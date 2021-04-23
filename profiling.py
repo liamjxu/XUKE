@@ -23,14 +23,13 @@ class Profile():
         unprocessed_basis = json.load(open("./resources/basis.json", 'r'))
         mean_base = np.mean(unprocessed_basis, axis=0)
         unprocessed_basis-=mean_base
+        self.unprocessed_basis = unprocessed_basis
         self.basis = unprocessed_basis/np.linalg.norm(unprocessed_basis).reshape(-1,1)
         self.mean_base = mean_base
         self.keyword_score_dict = {}
 
-        
-    
-    def get_abstracts_from_MAG(self):
-        self.abstracts = MAG_get_abstracts(self.affi, self.name)
+    def get_abstracts_from_MAG(self, mode='abstract'):
+        self.abstracts = MAG_get_abstracts(self.affi, self.name, mode)
     
     def filter_abstracts(self,time_ratio=(0.67,1)):
         years = [i for (_,i,_) in self.abstracts]
@@ -106,7 +105,6 @@ class Profile():
         self.keyword_score_dict = keyword_score_dict
         return keyword_score_dict
             
-
     def evaluate_subfields(self):
         k_list = list(self.keyword_score_dict.keys())
         k_list = k_list[:int(len(k_list)*1/3)]
@@ -151,16 +149,28 @@ class Profile():
 
         return [(words[idx], round(float(word_doc_similarity.reshape(1, -1)[0][idx]), 4)) for idx in keywords_idx]
 
+    # def _non_generic(self,word):
+    #     return True
+    #     word_ = self.model.encode(word)-self.mean_base
+    #     c = self.basis @ word_.T 
+    #     c = np.abs(c)
+    #     max_val = np.max(c)
+    #     min_val = np.min(c)
+    #     if max_val/min_val > 500:
+    #         return True
+    #     else:
+    #         return False
+
     def _non_generic(self,word):
-        word_ = self.model.encode(word)-self.mean_base
-        c = self.basis @ word_.T 
-        c = np.abs(c)
-        max_val = np.max(c)
-        min_val = np.min(c)
-        if max_val/min_val > 200:
+        word_emb = self.model.encode(word).reshape(1,-1)
+        diff = self.unprocessed_basis - word_emb
+        diff_norm = np.linalg.norm(diff, axis=1)
+        if sorted(diff_norm)[0]/sorted(diff_norm)[1] < 0.9:
             return True
         else:
             return False
+
+
 
 
     def scatter_keywords(self, keywords, document, diversity, top_ratio):

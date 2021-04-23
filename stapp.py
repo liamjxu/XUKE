@@ -38,11 +38,25 @@ if (st.button('Profile!',key='b2')):
         st.write("Keywords extracted: ", key_list)
         subfield_score = profile.evaluate_subfields()
         st.write(dict(zip(profile.basis_words, subfield_score)))
-
-        # st.write(len(profile.basis_words))
-        # st.write(len(subfield_score))
     else:
         st.write("No abstracts found for that researcher!")
 
+if (st.button('Profile w/ Titles!',key='b2')):
+    init = st.text('Start profiling.')
+    init.text('Start profiling, querying MAG...')
+    profile.get_abstracts_from_MAG(mode='title')
+    init.text('MAG querying finished.')
+    time.sleep(1)
+    profile.filter_abstracts(time_ratio=(time_ratio))
+    init.text('The corresponding time span is from year {} to {}.'.format(profile.starting_year, profile.ending_year)) 
+    if len(profile.abstracts) != 0:
+        final_keyword_score_dict = profile.extract_keywords(keyword_ratio=keyword_ratio)
+        _, wc_array, key_list = generate_word_cloud(final_keyword_score_dict)
+        st.image(wc_array, use_column_width=True)
+        st.write("Keywords extracted: ", key_list)
+        subfield_score = profile.evaluate_subfields()
+        st.write(dict(zip(profile.basis_words, subfield_score)))
+    else:
+        st.write("No abstracts found for that researcher!")
 
 # TODO: 1. lemmatizing the keywords (graphs->graph) 2. scale the keywords by the csv
