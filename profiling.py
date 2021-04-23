@@ -111,10 +111,10 @@ class Profile():
         k_list = list(self.keyword_score_dict.keys())
         k_list = k_list[:int(len(k_list)*1/3)]
         word_embeddings = self.model.encode(k_list)
-        print(word_embeddings.shape)
-        subfield_score = np.sum(self.basis @ word_embeddings.T, axis=0)
-        print(subfield_score.shape)
-        subfield_score /= np.sum(subfield_score)
+        subfield_score = np.sum(self.basis @ word_embeddings.T, axis=1)
+        if np.min(subfield_score) < 0:
+            subfield_score -= np.min(subfield_score)
+        subfield_score /= np.max(subfield_score)
         return subfield_score
 
 
@@ -157,7 +157,7 @@ class Profile():
         c = np.abs(c)
         max_val = np.max(c)
         min_val = np.min(c)
-        if max_val/min_val > 500:
+        if max_val/min_val > 200:
             return True
         else:
             return False
