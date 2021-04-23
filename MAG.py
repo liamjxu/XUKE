@@ -62,7 +62,7 @@ def MAG_get_abstracts(affi,name):
     author_mag_id = MAG_get_AuID(affi,name)
     
     # Find all the papers for that author ID
-    find_paper_attr = 'AW,DN,IA,Y,CC'
+    find_paper_attr = 'AW,DN,IA,Y,CC,DN'
     find_paper_url = "https://api.labs.cognitive.microsoft.com/academic/v1.0/evaluate?&count={}&expr=Composite(AND(AA.AuId={}))&attributes={}".format(COUNT, str(author_mag_id), find_paper_attr)
     response = requests.request("GET", find_paper_url, headers=HEADERS, data=PAYLOAD, params=QUERYSTRING)
     try:
@@ -81,7 +81,9 @@ def MAG_get_abstracts(affi,name):
         abstract = _get_abstract_from_IA(index_length, inverted_index)
         pub_year = entity['Y']
         pub_citation = entity['CC']
+        title = entity['DN']
         abstract_list.append((abstract,pub_year,pub_citation))
+        # abstract_list.append((title,pub_year,pub_citation))
     return abstract_list
 
 

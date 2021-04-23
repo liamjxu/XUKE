@@ -111,7 +111,9 @@ class Profile():
         k_list = list(self.keyword_score_dict.keys())
         k_list = k_list[:int(len(k_list)*1/3)]
         word_embeddings = self.model.encode(k_list)
+        print(word_embeddings.shape)
         subfield_score = np.sum(self.basis @ word_embeddings.T, axis=0)
+        print(subfield_score.shape)
         subfield_score /= np.sum(subfield_score)
         return subfield_score
 
@@ -174,5 +176,4 @@ class Profile():
         self.ab_idx+=1
         print('final keyword number:', len(scattered_keywords))
         return scattered_keyword_value_pair
-
 

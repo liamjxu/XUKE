@@ -38,6 +38,8 @@ if (st.button('Profile!',key='b2')):
         st.image(wc_array, use_column_width=True)
         st.write("Keywords extracted: ", key_list)
         st.write(dict(zip(profile.basis_words, subfield_score)))
+        st.write(len(profile.basis_words))
+        st.write(len(subfield_score))
     else:
         st.write("No abstracts found for that researcher!")
 
