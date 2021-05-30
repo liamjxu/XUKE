@@ -1,0 +1,12 @@
+streamlit==0.75.0
+nltk==3.4.5
+pandas==1.1.1
+requests==2.24.0
+fuzzywuzzy==0.18.0
+sentence_transformers==0.4.1.2
+wordcloud==1.8.1
+numpy==1.19.0
+matplotlib==3.3.1
+keywords==0.0.1
+Pillow==8.2.0
+scikit_learn==0.24.2

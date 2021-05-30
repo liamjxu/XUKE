@@ -1,11 +1,11 @@
 import streamlit as st
 from MAG import MAG_get_abstracts
-from visualization import generate_word_cloud
+from visualization import generate_word_cloud, get_semantic_capacity
 import time
 from profiling import Profile
 
 # Get the name and affi for profiling
-st.markdown('# Keyword Extraction based on EmbedRank:')
+st.markdown('# Profiling Researchers Based On Their Publications:')
 researcher_affiliation = st.text_input('Affiliation: ', 'University of Illinois at Urbana Champaign')
 researcher_name = st.text_input('Name: ','Kevin Chenchuan Chang')
 
@@ -35,9 +35,23 @@ if (st.button('Profile!',key='b2')):
         final_keyword_score_dict = profile.extract_keywords(keyword_ratio=keyword_ratio)
         _, wc_array, key_list = generate_word_cloud(final_keyword_score_dict)
         st.image(wc_array, use_column_width=True)
-        st.write("Keywords extracted: ", key_list)
         subfield_score = profile.evaluate_subfields()
-        st.write(dict(zip(profile.basis_words, subfield_score)))
+        detailed_profile = sorted(zip(subfield_score, profile.basis_words), reverse=True)
+        st.write('The researcher is predicted to be most interested in: ')
+        st.markdown('1. '+detailed_profile[0][1])
+        st.markdown('2. '+detailed_profile[1][1])
+        st.markdown('3. '+detailed_profile[2][1])
+        # st.write('The detailed profile of the researcher: ')
+        # st.write(dict(detailed_profile))
+        st.write("Keywords extracted for the researcher: ")
+        st.write(key_list)
+        # Keyword semantic capacity
+        st.write('The semantic capacity of the keywords: ')
+        semcap = get_semantic_capacity(key_list)
+        st.write(dict(sorted(zip(semcap.keys(),semcap.values()), key=lambda x:x[1])))
+
+
+
     else:
         st.write("No abstracts found for that researcher!")
 
@@ -55,8 +69,6 @@ if (st.button('Profile w/ Titles!',key='b2')):
         st.image(wc_array, use_column_width=True)
         st.write("Keywords extracted: ", key_list)
         subfield_score = profile.evaluate_subfields()
-        st.write(dict(zip(profile.basis_words, subfield_score)))
+        st.write(dict(sorted(zip(subfield_score, profile.basis_words), reverse=True)))
     else:
-        st.write("No abstracts found for that researcher!")
-
-# TODO: 1. lemmatizing the keywords (graphs->graph) 2. scale the keywords by the csv
+        st.write("No articles found for that researcher!")

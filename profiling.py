@@ -165,7 +165,7 @@ class Profile():
         word_emb = self.model.encode(word).reshape(1,-1)
         diff = self.unprocessed_basis - word_emb
         diff_norm = np.linalg.norm(diff, axis=1)
-        if sorted(diff_norm)[0]/sorted(diff_norm)[1] < 0.9:
+        if sorted(diff_norm)[0]/sorted(diff_norm)[2] < 0.87:
             return True
         else:
             return False
